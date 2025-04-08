@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 	testsuite.Run(m)
 }
 
-func TestAdminApiReencrypt(t *testing.T) {
+func TestIntegration_AdminApiReencrypt(t *testing.T) {
 	dir, path := testinfra.CreateGrafDir(t, testinfra.GrafanaOpts{
 		//EnableLog: true,
 		APIServerStorageType: options.StorageTypeUnified,
