@@ -3,7 +3,7 @@ module github.com/grafana/grafana/apps/dashboard
 go 1.24.2
 
 require (
-	cuelang.org/go v0.11.0
+	cuelang.org/go v0.11.1
 	github.com/grafana/grafana-app-sdk v0.35.1
 	github.com/grafana/grafana-plugin-sdk-go v0.274.1-0.20250318081012-21a7f15619b0
 	github.com/grafana/grafana/pkg/apimachinery v0.0.0-20250312121619-f64be062c432
@@ -57,6 +57,7 @@ require (
 	github.com/jszwedko/go-datemath v0.1.1-0.20230526204004-640a500621d6 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	github.com/magefile/mage v1.15.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattetti/filebuffer v1.0.1 // indirect

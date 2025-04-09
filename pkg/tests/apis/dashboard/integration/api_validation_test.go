@@ -19,6 +19,7 @@ import (
 	"github.com/grafana/grafana/pkg/tests/testinfra"
 	"github.com/grafana/grafana/pkg/tests/testsuite"
 	"github.com/stretchr/testify/require"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -296,13 +297,16 @@ func runDashboardValidationTests(t *testing.T, ctx TestContext) {
 					resourceClient := getResourceClient(t, ctx.Helper, ctx.AdminUser, tc.resourceInfo.GroupVersionResource())
 					_, err := resourceClient.Resource.Create(context.Background(), tc.testObject, v1.CreateOptions{})
 					require.Error(t, err)
+					statusErr, ok := err.(*apierrors.StatusError)
+					require.True(t, ok)
 
 					if tc.expectSpecErr {
-						require.Contains(t, err.Error(), "Invalid dashboard spec", "v1alpha1 should validate dashboard spec")
+						require.Equal(t, statusErr.Status().Reason, v1.StatusReasonInvalid)
+						require.Equal(t, statusErr.Status().Code, int32(http.StatusUnprocessableEntity))
 					} else {
 						// Other versions might still error but for different reasons
-						require.NotNil(t, err, "Dashboard with missing spec should still error")
-						require.NotContains(t, err.Error(), "Invalid dashboard spec", "Non-v1alpha1 versions should not contain 'Invalid dashboard spec' error")
+						require.NotEqual(t, statusErr.Status().Reason, v1.StatusReasonInvalid)
+						require.NotEqual(t, statusErr.Status().Code, http.StatusUnprocessableEntity)
 					}
 				})
 			}
