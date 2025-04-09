@@ -35,9 +35,7 @@ func TestMain(m *testing.M) {
 
 func TestIntegration_AdminApiReencrypt(t *testing.T) {
 	dir, path := testinfra.CreateGrafDir(t, testinfra.GrafanaOpts{
-		//EnableLog: true,
 		APIServerStorageType: options.StorageTypeUnified,
-		//EnableFeatureToggles: []string{featuremgmt.FlagAppPlatformGrpcClientAuth},
 	})
 
 	grafanaListenAddr, env := testinfra.StartGrafanaEnv(t, dir, path)
@@ -78,6 +76,10 @@ func TestIntegration_AdminApiReencrypt(t *testing.T) {
 	base64SecretsBeforeReencrypt := getBase64Secrets(t, env.SQLStore, secretsTable, secretsValueColumn, base64.RawStdEncoding)
 	alertmanagerSecretsBeforeReencrypt := getAlertmanagerSecrets(t, env.SQLStore, alertmanagerSecureSettingKey)
 
+	err = env.Server.HTTPServer.SecretsService.RotateDataKeys(context.Background())
+	require.NoError(t, err)
+
+	// Reencrypt with new data key.
 	ok, err := env.Server.HTTPServer.SecretsMigrator.ReEncryptSecrets(context.Background())
 	require.NoError(t, err)
 	assert.True(t, ok, "Failed to reencrypt all secrets")
@@ -90,6 +92,7 @@ func TestIntegration_AdminApiReencrypt(t *testing.T) {
 	verifySecrets(t, env, base64SecretsBeforeReencrypt, base64SecretsAfterReencrypt)
 	verifySecrets(t, env, alertmanagerSecretsBeforeReencrypt, alertmanagerSecretsAfterReencrypt)
 
+	// Rollback from envelope to legacy encryption.
 	ok, err = env.Server.HTTPServer.SecretsMigrator.RollBackSecrets(context.Background())
 	require.NoError(t, err)
 	assert.True(t, ok, "Failed to rollback all secrets")
