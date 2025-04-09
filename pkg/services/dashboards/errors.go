@@ -2,9 +2,13 @@ package dashboards
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/grafana/grafana/pkg/apimachinery/errutil"
 	"github.com/grafana/grafana/pkg/services/dashboards/dashboardaccess"
+	"github.com/grafana/grafana/pkg/util"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // Typed errors
@@ -122,6 +126,11 @@ var (
 		StatusCode: 403,
 		Status:     "quota-reached",
 	}
+	ErrInvalidDashboardSpec = dashboardaccess.DashboardErr{
+		Reason:     "Invalid dashboard spec",
+		StatusCode: 400,
+		Status:     "bad-request",
+	}
 
 	ErrFolderNotFound             = errors.New("folder not found")
 	ErrFolderVersionMismatch      = errors.New("the folder has been changed by someone else")
@@ -141,4 +150,55 @@ type UpdatePluginDashboardError struct {
 
 func (d UpdatePluginDashboardError) Error() string {
 	return "Dashboard belongs to plugin"
+}
+
+type DashboardSpecValidationErr struct {
+	dashboardaccess.DashboardErr
+	ValidationErrors field.ErrorList
+}
+
+func NewDashboardSpecValidationErr(validationErrors field.ErrorList) *DashboardSpecValidationErr {
+	return &DashboardSpecValidationErr{
+		DashboardErr:     ErrInvalidDashboardSpec,
+		ValidationErrors: validationErrors,
+	}
+}
+
+func (e *DashboardSpecValidationErr) Error() string {
+	if len(e.ValidationErrors) == 0 {
+		return e.Reason
+	}
+
+	var errMsg strings.Builder
+	errMsg.WriteString(e.Reason + ": ")
+	for i, err := range e.ValidationErrors {
+		if i > 0 {
+			errMsg.WriteString("; ")
+		}
+		errMsg.WriteString(err.Error())
+	}
+	return errMsg.String()
+}
+
+func (e *DashboardSpecValidationErr) Body() util.DynMap {
+	dm := e.DashboardErr.Body()
+	if dm == nil {
+		return nil
+	}
+
+	// Add validation details if available
+	if len(e.ValidationErrors) > 0 {
+		errorDetails := make([]interface{}, 0, len(e.ValidationErrors))
+		for _, err := range e.ValidationErrors {
+			errorDetails = append(errorDetails, map[string]interface{}{
+				"field":    err.Field,
+				"type":     string(err.Type),
+				"detail":   err.Detail,
+				"badValue": fmt.Sprintf("%v", err.BadValue),
+			})
+		}
+		dm["validationErrors"] = errorDetails
+	}
+
+	return dm
 }

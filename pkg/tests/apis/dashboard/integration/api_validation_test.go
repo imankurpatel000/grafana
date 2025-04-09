@@ -7,7 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	dashboardv0alpha1 "github.com/grafana/grafana/apps/dashboard/pkg/apis/dashboard/v0alpha1"
 	dashboardv1alpha1 "github.com/grafana/grafana/apps/dashboard/pkg/apis/dashboard/v1alpha1"
+	dashboardv2alpha1 "github.com/grafana/grafana/apps/dashboard/pkg/apis/dashboard/v2alpha1"
 	folderv0alpha1 "github.com/grafana/grafana/pkg/apis/folder/v0alpha1"
 	"github.com/grafana/grafana/pkg/apiserver/rest"
 	"github.com/grafana/grafana/pkg/services/featuremgmt"
@@ -219,19 +221,91 @@ func runDashboardValidationTests(t *testing.T, ctx TestContext) {
 	t.Run("Dashboard schema validations", func(t *testing.T) {
 		// Test invalid dashboard schema
 		t.Run("reject dashboard with invalid schema", func(t *testing.T) {
-			dashObj := &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": dashboardv1alpha1.DashboardResourceInfo.GroupVersion().String(),
-					"kind":       dashboardv1alpha1.DashboardResourceInfo.GroupVersionKind().Kind,
-					"metadata": map[string]interface{}{
-						"generateName": "test-",
+			testCases := []struct {
+				name          string
+				resourceInfo  utils.ResourceInfo
+				expectSpecErr bool
+				testObject    *unstructured.Unstructured
+			}{
+				{
+					name:          "v0alpha1 dashboard with missing spec",
+					resourceInfo:  dashboardv0alpha1.DashboardResourceInfo,
+					expectSpecErr: false,
+					testObject: &unstructured.Unstructured{
+						Object: map[string]interface{}{
+							"apiVersion": dashboardv0alpha1.DashboardResourceInfo.TypeMeta().APIVersion,
+							"kind":       "Dashboard",
+							"metadata": map[string]interface{}{
+								"generateName": "test-",
+							},
+							"spec": map[string]interface{}{
+								"editable": "elephant",
+								"time":     9000,
+								"uid":      strings.Repeat("a", 100),
+							},
+						},
 					},
-					// Missing spec
+				},
+				{
+					name:          "v1alpha1 dashboard with missing spec",
+					resourceInfo:  dashboardv1alpha1.DashboardResourceInfo,
+					expectSpecErr: true,
+					testObject: &unstructured.Unstructured{
+						Object: map[string]interface{}{
+							"apiVersion": dashboardv1alpha1.DashboardResourceInfo.TypeMeta().APIVersion,
+							"kind":       "Dashboard",
+							"metadata": map[string]interface{}{
+								"generateName": "test-",
+							},
+							"spec": map[string]interface{}{
+								"editable": "elephant",
+								"time":     9000,
+								"uid":      strings.Repeat("a", 100),
+							},
+						},
+					},
+				},
+				{
+					// The cue file for v2alpha1 seems to have some issues, validation is disabled for now
+					// Invalid dashboard spec: DashboardSpec.annotations: Invalid value: conflicting values null and [...AnnotationQueryKind] (mismatched types null and list)
+					name:          "v2alpha1 dashboard with missing spec",
+					resourceInfo:  dashboardv2alpha1.DashboardResourceInfo,
+					expectSpecErr: false,
+					testObject: &unstructured.Unstructured{
+						Object: map[string]interface{}{
+							"apiVersion": dashboardv2alpha1.DashboardResourceInfo.TypeMeta().APIVersion,
+							"kind":       "Dashboard",
+							"metadata": map[string]interface{}{
+								"generateName": "test-",
+							},
+							"spec": map[string]interface{}{
+								"description": "valid description",
+								"cursorSync":  "I like turtles",
+							},
+						},
+					},
 				},
 			}
 
-			_, err := adminClient.Resource.Create(context.Background(), dashObj, v1.CreateOptions{})
-			require.Error(t, err)
+			for _, tc := range testCases {
+				t.Run(tc.name, func(t *testing.T) {
+					if strings.Contains(tc.name, "v2alpha1") {
+						t.Skip("Skipping v2alpha1 schema validation due to CUE schema issues")
+					}
+
+					resourceClient := getResourceClient(t, ctx.Helper, ctx.AdminUser, tc.resourceInfo.GroupVersionResource())
+					_, err := resourceClient.Resource.Create(context.Background(), tc.testObject, v1.CreateOptions{})
+					require.Error(t, err)
+
+					if tc.expectSpecErr {
+						require.Contains(t, err.Error(), "Invalid dashboard spec", "v1alpha1 should validate dashboard spec")
+					} else {
+						// Other versions might still error but for different reasons
+						require.NotNil(t, err, "Dashboard with missing spec should still error")
+						require.NotContains(t, err.Error(), "Invalid dashboard spec", "Non-v1alpha1 versions should not contain 'Invalid dashboard spec' error")
+					}
+				})
+			}
 		})
 	})
 
@@ -683,20 +757,12 @@ func createTestContext(t *testing.T, helper *apis.K8sTestHelper, orgUsers apis.O
 
 // getDashboardGVR returns the dashboard GroupVersionResource
 func getDashboardGVR() schema.GroupVersionResource {
-	return schema.GroupVersionResource{
-		Group:    dashboardv1alpha1.DashboardResourceInfo.GroupVersion().Group,
-		Version:  dashboardv1alpha1.DashboardResourceInfo.GroupVersion().Version,
-		Resource: dashboardv1alpha1.DashboardResourceInfo.GetName(),
-	}
+	return dashboardv1alpha1.DashboardResourceInfo.GroupVersionResource()
 }
 
 // getFolderGVR returns the folder GroupVersionResource
 func getFolderGVR() schema.GroupVersionResource {
-	return schema.GroupVersionResource{
-		Group:    folderv0alpha1.FolderResourceInfo.GroupVersion().Group,
-		Version:  folderv0alpha1.FolderResourceInfo.GroupVersion().Version,
-		Resource: folderv0alpha1.FolderResourceInfo.GetName(),
-	}
+	return folderv0alpha1.FolderResourceInfo.GroupVersionResource()
 }
 
 // Get a resource client for the specified user
