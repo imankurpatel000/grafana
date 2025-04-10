@@ -16,11 +16,6 @@ import (
 )
 
 func ValidateDashboardSpec(obj *Dashboard) field.ErrorList {
-	// There seems to be an issue in the underlying CUE schema, skip validation for now
-	// Invalid dashboard spec: DashboardSpec.annotations: Invalid value: conflicting values null and [...AnnotationQueryKind] (mismatched types null and list)
-	return nil
-
-	//nolint:unreachable
 	data, err := json.Marshal(obj.Spec)
 	if err != nil {
 		return field.ErrorList{

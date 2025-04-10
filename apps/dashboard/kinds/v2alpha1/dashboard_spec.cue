@@ -2,13 +2,13 @@ package v2alpha1
 
 DashboardSpec: {
 	// Title of dashboard.
-	annotations: [...AnnotationQueryKind]
+	annotations?: [...AnnotationQueryKind]
 
 	// Configuration of dashboard cursor sync behavior.
 	// "Off" for no shared crosshair or tooltip (default).
 	// "Crosshair" for shared crosshair.
 	// "Tooltip" for shared crosshair AND shared tooltip.
-	cursorSync: DashboardCursorSync
+	cursorSync?: DashboardCursorSync
 
 	// Description of dashboard.
 	description?: string
@@ -16,12 +16,12 @@ DashboardSpec: {
 	// Whether a dashboard is editable or not.
 	editable?: bool | *true
 
-	elements: [ElementReference.name]: Element
+	elements?: [ElementReference.name]: Element
 
-	layout: GridLayoutKind | RowsLayoutKind | AutoGridLayoutKind | TabsLayoutKind
+	layout?: GridLayoutKind | RowsLayoutKind | AutoGridLayoutKind | TabsLayoutKind
 
 	// Links with references to other dashboards or external websites.
-	links: [...DashboardLink]
+	links?: [...DashboardLink]
 
 	// When set to true, the dashboard will redraw panels at an interval matching the pixel width.
 	// This will keep data "moving left" regardless of the query refresh rate. This setting helps
@@ -29,22 +29,22 @@ DashboardSpec: {
 	liveNow?: bool
 
 	// When set to true, the dashboard will load all panels in the dashboard when it's loaded.
-	preload: bool
+	preload?: bool | *true
 
 	// Plugins only. The version of the dashboard installed together with the plugin.
 	// This is used to determine if the dashboard should be updated when the plugin is updated.
 	revision?: uint16
 
 	// Tags associated with dashboard.
-	tags: [...string]
+	tags?: [...string]
 
-	timeSettings: TimeSettingsSpec
+	timeSettings?: TimeSettingsSpec
 
 	// Title of dashboard.
 	title: string
 
 	// Configured template variables.
-	variables: [...VariableKind]
+	variables?: [...VariableKind]
 }
 
 // Supported dashboard elements

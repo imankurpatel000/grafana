@@ -1681,44 +1681,43 @@ func NewDashboardMetricFindValue() *DashboardMetricFindValue {
 // +k8s:openapi-gen=true
 type DashboardSpec struct {
 	// Title of dashboard.
-	Annotations []DashboardAnnotationQueryKind `json:"annotations"`
+	Annotations []DashboardAnnotationQueryKind `json:"annotations,omitempty"`
 	// Configuration of dashboard cursor sync behavior.
 	// "Off" for no shared crosshair or tooltip (default).
 	// "Crosshair" for shared crosshair.
 	// "Tooltip" for shared crosshair AND shared tooltip.
-	CursorSync DashboardDashboardCursorSync `json:"cursorSync"`
+	CursorSync *DashboardDashboardCursorSync `json:"cursorSync,omitempty"`
 	// Description of dashboard.
 	Description *string `json:"description,omitempty"`
 	// Whether a dashboard is editable or not.
-	Editable *bool                                                                       `json:"editable,omitempty"`
-	Elements map[string]DashboardElement                                                 `json:"elements"`
-	Layout   DashboardGridLayoutKindOrRowsLayoutKindOrAutoGridLayoutKindOrTabsLayoutKind `json:"layout"`
+	Editable *bool                                                                        `json:"editable,omitempty"`
+	Elements map[string]DashboardElement                                                  `json:"elements,omitempty"`
+	Layout   *DashboardGridLayoutKindOrRowsLayoutKindOrAutoGridLayoutKindOrTabsLayoutKind `json:"layout,omitempty"`
 	// Links with references to other dashboards or external websites.
-	Links []DashboardDashboardLink `json:"links"`
+	Links []DashboardDashboardLink `json:"links,omitempty"`
 	// When set to true, the dashboard will redraw panels at an interval matching the pixel width.
 	// This will keep data "moving left" regardless of the query refresh rate. This setting helps
 	// avoid dashboards presenting stale live data.
 	LiveNow *bool `json:"liveNow,omitempty"`
 	// When set to true, the dashboard will load all panels in the dashboard when it's loaded.
-	Preload bool `json:"preload"`
+	Preload *bool `json:"preload,omitempty"`
 	// Plugins only. The version of the dashboard installed together with the plugin.
 	// This is used to determine if the dashboard should be updated when the plugin is updated.
 	Revision *uint16 `json:"revision,omitempty"`
 	// Tags associated with dashboard.
-	Tags         []string                  `json:"tags"`
-	TimeSettings DashboardTimeSettingsSpec `json:"timeSettings"`
+	Tags         []string                   `json:"tags,omitempty"`
+	TimeSettings *DashboardTimeSettingsSpec `json:"timeSettings,omitempty"`
 	// Title of dashboard.
 	Title string `json:"title"`
 	// Configured template variables.
-	Variables []DashboardVariableKind `json:"variables"`
+	Variables []DashboardVariableKind `json:"variables,omitempty"`
 }
 
 // NewDashboardSpec creates a new DashboardSpec object.
 func NewDashboardSpec() *DashboardSpec {
 	return &DashboardSpec{
-		Editable:     (func(input bool) *bool { return &input })(true),
-		Layout:       *NewDashboardGridLayoutKindOrRowsLayoutKindOrAutoGridLayoutKindOrTabsLayoutKind(),
-		TimeSettings: *NewDashboardTimeSettingsSpec(),
+		Editable: (func(input bool) *bool { return &input })(true),
+		Preload:  (func(input bool) *bool { return &input })(true),
 	}
 }
 

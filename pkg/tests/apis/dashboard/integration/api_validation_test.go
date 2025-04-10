@@ -267,11 +267,9 @@ func runDashboardValidationTests(t *testing.T, ctx TestContext) {
 					},
 				},
 				{
-					// The cue file for v2alpha1 seems to have some issues, validation is disabled for now
-					// Invalid dashboard spec: DashboardSpec.annotations: Invalid value: conflicting values null and [...AnnotationQueryKind] (mismatched types null and list)
 					name:          "v2alpha1 dashboard with missing spec",
 					resourceInfo:  dashboardv2alpha1.DashboardResourceInfo,
-					expectSpecErr: false,
+					expectSpecErr: true,
 					testObject: &unstructured.Unstructured{
 						Object: map[string]interface{}{
 							"apiVersion": dashboardv2alpha1.DashboardResourceInfo.TypeMeta().APIVersion,
@@ -290,10 +288,6 @@ func runDashboardValidationTests(t *testing.T, ctx TestContext) {
 
 			for _, tc := range testCases {
 				t.Run(tc.name, func(t *testing.T) {
-					if strings.Contains(tc.name, "v2alpha1") {
-						t.Skip("Skipping v2alpha1 schema validation due to CUE schema issues")
-					}
-
 					resourceClient := getResourceClient(t, ctx.Helper, ctx.AdminUser, tc.resourceInfo.GroupVersionResource())
 					_, err := resourceClient.Resource.Create(context.Background(), tc.testObject, v1.CreateOptions{})
 					require.Error(t, err)
@@ -306,7 +300,7 @@ func runDashboardValidationTests(t *testing.T, ctx TestContext) {
 					} else {
 						// Other versions might still error but for different reasons
 						require.NotEqual(t, statusErr.Status().Reason, v1.StatusReasonInvalid)
-						require.NotEqual(t, statusErr.Status().Code, http.StatusUnprocessableEntity)
+						require.NotEqual(t, statusErr.Status().Code, int32(http.StatusUnprocessableEntity))
 					}
 				})
 			}
@@ -863,7 +857,8 @@ func createDashboardObject(t *testing.T, title string, folderUID string, generat
 				},
 			},
 			"spec": map[string]interface{}{
-				"title": title,
+				"title":         title,
+				"schemaVersion": 41,
 			},
 		},
 	}

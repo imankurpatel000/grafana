@@ -1355,49 +1355,41 @@ export const defaultMetricFindValue = (): MetricFindValue => ({
 
 export interface Spec {
 	// Title of dashboard.
-	annotations: AnnotationQueryKind[];
+	annotations?: AnnotationQueryKind[];
 	// Configuration of dashboard cursor sync behavior.
 	// "Off" for no shared crosshair or tooltip (default).
 	// "Crosshair" for shared crosshair.
 	// "Tooltip" for shared crosshair AND shared tooltip.
-	cursorSync: DashboardCursorSync;
+	cursorSync?: DashboardCursorSync;
 	// Description of dashboard.
 	description?: string;
 	// Whether a dashboard is editable or not.
 	editable?: boolean;
-	elements: Record<string, Element>;
-	layout: GridLayoutKind | RowsLayoutKind | AutoGridLayoutKind | TabsLayoutKind;
+	elements?: Record<string, Element>;
+	layout?: GridLayoutKind | RowsLayoutKind | AutoGridLayoutKind | TabsLayoutKind;
 	// Links with references to other dashboards or external websites.
-	links: DashboardLink[];
+	links?: DashboardLink[];
 	// When set to true, the dashboard will redraw panels at an interval matching the pixel width.
 	// This will keep data "moving left" regardless of the query refresh rate. This setting helps
 	// avoid dashboards presenting stale live data.
 	liveNow?: boolean;
 	// When set to true, the dashboard will load all panels in the dashboard when it's loaded.
-	preload: boolean;
+	preload?: boolean;
 	// Plugins only. The version of the dashboard installed together with the plugin.
 	// This is used to determine if the dashboard should be updated when the plugin is updated.
 	revision?: number;
 	// Tags associated with dashboard.
-	tags: string[];
-	timeSettings: TimeSettingsSpec;
+	tags?: string[];
+	timeSettings?: TimeSettingsSpec;
 	// Title of dashboard.
 	title: string;
 	// Configured template variables.
-	variables: VariableKind[];
+	variables?: VariableKind[];
 }
 
 export const defaultSpec = (): Spec => ({
-	annotations: [],
-	cursorSync: "Off",
 	editable: true,
-	elements: {},
-	layout: defaultGridLayoutKind(),
-	links: [],
-	preload: false,
-	tags: [],
-	timeSettings: defaultTimeSettingsSpec(),
+	preload: true,
 	title: "",
-	variables: [],
 });
 

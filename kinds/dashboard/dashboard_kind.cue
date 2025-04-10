@@ -23,7 +23,7 @@ lineage: schemas: [{
 			uid?: string
 
 			// Title of dashboard.
-			title?: string
+			title: string
 
 			// Description of dashboard.
 			description?: string
@@ -74,7 +74,7 @@ lineage: schemas: [{
 
 			// Version of the JSON schema, incremented each time a Grafana update brings
 			// changes to said schema.
-			schemaVersion: uint16 | *41
+			schemaVersion: 41 // The plan is to send everyone else down to v0 or have them upgrade to v2.
 
 			// Version of the dashboard, incremented each time the dashboard is updated.
 			version?: uint32
@@ -101,7 +101,7 @@ lineage: schemas: [{
 			snapshot?: #Snapshot @grafanamaturity(NeedsExpertReview)
 
 			// When set to true, the dashboard will load all panels in the dashboard when it's loaded.
-			preload?: bool
+			preload?: bool | *true
 		} @cuetsy(kind="interface") @grafana(TSVeneer="type")
 
 		///////////////////////////////////////
